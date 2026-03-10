@@ -1,0 +1,51 @@
+import { describe, it, expect } from 'vitest';
+import { viewportToPdfCoords } from '../src/placement-calculator.js';
+
+describe('viewportToPdfCoords', () => {
+  it('should convert top-left origin to bottom-left origin', () => {
+    const coords = viewportToPdfCoords(
+      { pageNumber: 1, x: 100, y: 100, width: 200, height: 50 },
+      792, // standard letter page height in points
+      1.0,
+    );
+    // pdfY = 792 - 100 - 50 = 642
+    expect(coords.x).toBe(100);
+    expect(coords.y).toBe(642);
+    expect(coords.width).toBe(200);
+    expect(coords.height).toBe(50);
+  });
+
+  it('should handle scale factor', () => {
+    const coords = viewportToPdfCoords(
+      { pageNumber: 1, x: 200, y: 200, width: 400, height: 100 },
+      792,
+      2.0,
+    );
+    // pdfX = 200/2 = 100, pdfWidth = 400/2 = 200, pdfHeight = 100/2 = 50
+    // pdfY = 792 - (200/2) - 50 = 792 - 100 - 50 = 642
+    expect(coords.x).toBe(100);
+    expect(coords.y).toBe(642);
+    expect(coords.width).toBe(200);
+    expect(coords.height).toBe(50);
+  });
+
+  it('should place at top of page', () => {
+    const coords = viewportToPdfCoords(
+      { pageNumber: 1, x: 0, y: 0, width: 100, height: 50 },
+      792,
+      1.0,
+    );
+    // pdfY = 792 - 0 - 50 = 742
+    expect(coords.y).toBe(742);
+  });
+
+  it('should place at bottom of page', () => {
+    const coords = viewportToPdfCoords(
+      { pageNumber: 1, x: 0, y: 742, width: 100, height: 50 },
+      792,
+      1.0,
+    );
+    // pdfY = 792 - 742 - 50 = 0
+    expect(coords.y).toBe(0);
+  });
+});
