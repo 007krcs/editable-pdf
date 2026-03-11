@@ -38,7 +38,8 @@ function getFieldOptions(field: PDFField): string[] | undefined {
 function isRequired(field: PDFField): boolean {
   try {
     return field.isRequired();
-  } catch {
+  } catch (err) {
+    console.warn(`[form-engine] Could not read isRequired for "${field.getName()}":`, err);
     return false;
   }
 }
@@ -46,7 +47,8 @@ function isRequired(field: PDFField): boolean {
 function isReadOnly(field: PDFField): boolean {
   try {
     return field.isReadOnly();
-  } catch {
+  } catch (err) {
+    console.warn(`[form-engine] Could not read isReadOnly for "${field.getName()}":`, err);
     return false;
   }
 }
@@ -63,8 +65,8 @@ function getWidgetRect(field: PDFField): Rectangle {
         height: rect.height,
       };
     }
-  } catch {
-    // Fall through to default
+  } catch (err) {
+    console.warn(`[form-engine] Could not read widget rect for "${field.getName()}":`, err);
   }
   return { x: 0, y: 0, width: 0, height: 0 };
 }
@@ -81,8 +83,8 @@ function getFieldPage(field: PDFField, pdfDoc: PDFDocument): number {
         }
       }
     }
-  } catch {
-    // Fall through to default
+  } catch (err) {
+    console.warn(`[form-engine] Could not determine page for "${field.getName()}":`, err);
   }
   return 1;
 }

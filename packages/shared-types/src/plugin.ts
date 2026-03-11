@@ -56,13 +56,19 @@ export interface PluginContext {
 
 /**
  * Contract every DocSDK plugin must implement.
- * Plugins are initialized in registration order and destroyed in reverse order.
+ * Plugins are initialized in dependency order and destroyed in reverse order.
  */
 export interface DocSDKPlugin {
   /** Unique plugin name (used for lookup via getPlugin) */
   readonly name: string;
   /** SemVer version string */
   readonly version: string;
+  /** Plugin names that MUST be registered before this plugin initializes */
+  readonly dependencies?: readonly string[];
+  /** Plugin names that are used if available, but not required */
+  readonly optionalDependencies?: readonly string[];
+  /** Capability tags this plugin provides (e.g., 'rendering', 'forms') */
+  readonly capabilities?: readonly string[];
   /** Called once during SDK initialization. Subscribe to events, discover peers. */
   initialize(context: PluginContext): void | Promise<void>;
   /** Called during SDK shutdown. Clean up subscriptions, timers, DOM references. */

@@ -63,7 +63,13 @@ describe('FormEnginePlugin', () => {
   it('should have correct name and version', () => {
     const plugin = new FormEnginePlugin();
     expect(plugin.name).toBe('form-engine');
-    expect(plugin.version).toBe('0.1.0');
+    expect(plugin.version).toBe('0.2.0');
+  });
+
+  it('should declare dependencies and capabilities', () => {
+    const plugin = new FormEnginePlugin();
+    expect(plugin.dependencies).toEqual(['pdf-engine']);
+    expect(plugin.capabilities).toEqual(['forms']);
   });
 
   it('should detect fields on document:loaded', async () => {
@@ -88,6 +94,26 @@ describe('FormEnginePlugin', () => {
     expect(fields[0].type).toBe(FormFieldType.TEXT);
     expect(fields[1].name).toBe('agree');
     expect(fields[1].type).toBe(FormFieldType.CHECKBOX);
+  });
+
+  it('should reset dirty flag on document:loaded', async () => {
+    const pdfDoc = await createTestPdfWithFields();
+    const plugin = new FormEnginePlugin();
+    const { context, events } = createMockContext(pdfDoc);
+
+    plugin.initialize(context);
+
+    // Make it dirty
+    await plugin.writeFieldValue('name', 'Dirty');
+    expect(plugin.dirty).toBe(true);
+
+    // Emit document:loaded — should reset dirty
+    events.emit('document:loaded', {
+      document: { id: 'doc_1', pageCount: 1, bytes: new Uint8Array(), mimeType: undefined },
+      pageCount: 1,
+    });
+
+    expect(plugin.dirty).toBe(false);
   });
 
   it('should cache detected fields', async () => {
@@ -127,7 +153,33 @@ describe('FormEnginePlugin', () => {
     expect(values['agree']).toBe(false);
   });
 
-  it('should write a field value and emit field:changed', async () => {
+  // ── Batch write behavior (v2) ───────────────────────────────
+
+  it('should NOT reserialize by default (deferred batch mode)', async () => {
+    const pdfDoc = await createTestPdfWithFields();
+    const plugin = new FormEnginePlugin();
+    const { context, mockPdfEngine } = createMockContext(pdfDoc);
+
+    plugin.initialize(context);
+
+    await plugin.writeFieldValue('name', 'Jane');
+    expect(mockPdfEngine.reserialize).not.toHaveBeenCalled();
+    expect(plugin.dirty).toBe(true);
+  });
+
+  it('should reserialize immediately when immediate: true', async () => {
+    const pdfDoc = await createTestPdfWithFields();
+    const plugin = new FormEnginePlugin();
+    const { context, mockPdfEngine } = createMockContext(pdfDoc);
+
+    plugin.initialize(context);
+
+    await plugin.writeFieldValue('name', 'Jane', { immediate: true });
+    expect(mockPdfEngine.reserialize).toHaveBeenCalledOnce();
+    expect(plugin.dirty).toBe(false);
+  });
+
+  it('should emit field:changed even in deferred mode', async () => {
     const pdfDoc = await createTestPdfWithFields();
     const plugin = new FormEnginePlugin();
     const { context, events } = createMockContext(pdfDoc);
@@ -146,16 +198,52 @@ describe('FormEnginePlugin', () => {
     });
   });
 
-  it('should call reserialize after writing', async () => {
+  it('should batch multiple writes and flush once', async () => {
     const pdfDoc = await createTestPdfWithFields();
     const plugin = new FormEnginePlugin();
     const { context, mockPdfEngine } = createMockContext(pdfDoc);
 
     plugin.initialize(context);
 
-    await plugin.writeFieldValue('name', 'Updated');
+    await plugin.writeFieldValue('name', 'Jane');
+    await plugin.writeFieldValue('name', 'Alice');
+    expect(mockPdfEngine.reserialize).not.toHaveBeenCalled();
+    expect(plugin.dirty).toBe(true);
+
+    await plugin.flush();
     expect(mockPdfEngine.reserialize).toHaveBeenCalledOnce();
+    expect(plugin.dirty).toBe(false);
   });
+
+  it('should no-op flush when not dirty', async () => {
+    const pdfDoc = await createTestPdfWithFields();
+    const plugin = new FormEnginePlugin();
+    const { context, mockPdfEngine } = createMockContext(pdfDoc);
+
+    plugin.initialize(context);
+
+    await plugin.flush();
+    expect(mockPdfEngine.reserialize).not.toHaveBeenCalled();
+  });
+
+  it('should writeAllFieldValues in batch mode', async () => {
+    const pdfDoc = await createTestPdfWithFields();
+    const plugin = new FormEnginePlugin();
+    const { context, events, mockPdfEngine } = createMockContext(pdfDoc);
+
+    plugin.initialize(context);
+
+    const changedListener = vi.fn();
+    events.on('field:changed', changedListener);
+
+    await plugin.writeAllFieldValues({ name: 'Jane', agree: true });
+
+    expect(mockPdfEngine.reserialize).not.toHaveBeenCalled();
+    expect(plugin.dirty).toBe(true);
+    expect(changedListener).toHaveBeenCalledTimes(2);
+  });
+
+  // ── Cleanup ─────────────────────────────────────────────────
 
   it('should clean up listeners on destroy', async () => {
     const pdfDoc = await createTestPdfWithFields();
@@ -165,7 +253,6 @@ describe('FormEnginePlugin', () => {
     plugin.initialize(context);
     await plugin.destroy();
 
-    // After destroy, emitting document:loaded should not trigger field detection
     const fieldsListener = vi.fn();
     events.on('fields:detected', fieldsListener);
 
@@ -175,6 +262,19 @@ describe('FormEnginePlugin', () => {
     });
 
     expect(fieldsListener).not.toHaveBeenCalled();
+  });
+
+  it('should reset dirty flag on destroy', async () => {
+    const pdfDoc = await createTestPdfWithFields();
+    const plugin = new FormEnginePlugin();
+    const { context } = createMockContext(pdfDoc);
+
+    plugin.initialize(context);
+    await plugin.writeFieldValue('name', 'Dirty');
+    expect(plugin.dirty).toBe(true);
+
+    await plugin.destroy();
+    expect(plugin.dirty).toBe(false);
   });
 
   it('should throw when PDFEnginePlugin is not registered', () => {

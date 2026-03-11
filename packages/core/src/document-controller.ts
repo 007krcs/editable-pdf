@@ -36,13 +36,18 @@ const VALID_TRANSITIONS: Readonly<Record<DocumentState, readonly DocumentState[]
 
 /**
  * Manages document lifecycle state, canonical bytes, and emits lifecycle events.
- * Implements `DocumentControllerView` — the subset exposed to plugins.
+ *
+ * v2 improvements:
+ * - Operation lock prevents concurrent load/export races
+ * - AbortSignal support for cancellable operations
+ * - Atomic updateBytes only in valid states
  */
 export class DocumentController implements DocumentControllerView {
   private _state: DocumentState = DocumentState.IDLE;
   private _currentBytes: Uint8Array | null = null;
   private _pageCount = 0;
   private _documentId: string | null = null;
+  private _operationLock = false;
 
   constructor(private readonly events: TypedEventEmitter<DocSDKEventMap>) {}
 
@@ -63,8 +68,16 @@ export class DocumentController implements DocumentControllerView {
   /**
    * Update the canonical document bytes after a mutation.
    * Transitions to MODIFIED if the document was READY or already MODIFIED.
+   * @throws {InvalidStateError} if not in a state that allows mutation
    */
   updateBytes(newBytes: Uint8Array): void {
+    if (
+      this._state !== DocumentState.READY &&
+      this._state !== DocumentState.MODIFIED &&
+      this._state !== DocumentState.LOADED
+    ) {
+      throw new InvalidStateError(this._state, 'updateBytes');
+    }
     this._currentBytes = newBytes;
     if (this._state === DocumentState.READY || this._state === DocumentState.MODIFIED) {
       this._state = DocumentState.MODIFIED;
@@ -84,6 +97,11 @@ export class DocumentController implements DocumentControllerView {
     return this._documentId;
   }
 
+  /** Whether an async operation (load/export) is in progress. */
+  get isLocked(): boolean {
+    return this._operationLock;
+  }
+
   /**
    * Validate and execute a state transition.
    * @throws {InvalidStateError} if the transition is not allowed
@@ -96,6 +114,24 @@ export class DocumentController implements DocumentControllerView {
     this._state = to;
   }
 
+  /**
+   * Acquire the operation lock. Prevents concurrent load/export.
+   * @throws {Error} if already locked
+   */
+  private acquireLock(operation: string): void {
+    if (this._operationLock) {
+      throw new Error(
+        `Cannot ${operation}: another operation is in progress. ` +
+        `Wait for the current operation to finish or abort it.`,
+      );
+    }
+    this._operationLock = true;
+  }
+
+  private releaseLock(): void {
+    this._operationLock = false;
+  }
+
   // ── Document lifecycle operations ──────────────────────────
 
   /**
@@ -104,18 +140,33 @@ export class DocumentController implements DocumentControllerView {
    *
    * @param source - The document source descriptor
    * @param loader - An async function that resolves the source to raw bytes
+   * @param signal - Optional AbortSignal to cancel the operation
    * @returns A handle to the loaded document
    * @throws {DocumentLoadError} if loading fails
    */
   async load(
     source: DocumentSource,
     loader: (source: DocumentSource) => Promise<Uint8Array>,
+    signal?: AbortSignal,
   ): Promise<DocumentHandle> {
-    this.transition(DocumentState.LOADING);
-    this.events.emit('document:loading', { source });
+    this.acquireLock('load');
 
     try {
+      this.transition(DocumentState.LOADING);
+      this.events.emit('document:loading', { source });
+
+      // Check for cancellation before starting async work
+      if (signal?.aborted) {
+        throw new Error('Load aborted');
+      }
+
       const bytes = await loader(source);
+
+      // Check for cancellation after async work
+      if (signal?.aborted) {
+        throw new Error('Load aborted');
+      }
+
       this._currentBytes = bytes;
       this._documentId = `doc_${++nextId}`;
       this._state = DocumentState.LOADED;
@@ -135,6 +186,8 @@ export class DocumentController implements DocumentControllerView {
         err instanceof Error ? err : new DocumentLoadError('Failed to load document', err);
       this.events.emit('document:error', { error, phase: 'loading' });
       throw error;
+    } finally {
+      this.releaseLock();
     }
   }
 
@@ -161,13 +214,30 @@ export class DocumentController implements DocumentControllerView {
   /**
    * Serialize the document using the provided serializer.
    * Transitions LOADED/READY/MODIFIED → EXPORTING → READY on success.
+   *
+   * @param serializer - Async function producing the export bytes
+   * @param signal - Optional AbortSignal to cancel the operation
    */
-  async export(serializer: () => Promise<Uint8Array>): Promise<Uint8Array> {
-    this.transition(DocumentState.EXPORTING);
-    this.events.emit('document:exporting', {} as Record<string, never>);
+  async export(
+    serializer: () => Promise<Uint8Array>,
+    signal?: AbortSignal,
+  ): Promise<Uint8Array> {
+    this.acquireLock('export');
 
     try {
+      this.transition(DocumentState.EXPORTING);
+      this.events.emit('document:exporting', {} as Record<string, never>);
+
+      if (signal?.aborted) {
+        throw new Error('Export aborted');
+      }
+
       const bytes = await serializer();
+
+      if (signal?.aborted) {
+        throw new Error('Export aborted');
+      }
+
       this._currentBytes = bytes;
       this._state = DocumentState.READY;
       this.events.emit('document:exported', { bytes });
@@ -177,6 +247,8 @@ export class DocumentController implements DocumentControllerView {
       const error = err instanceof Error ? err : new Error('Export failed');
       this.events.emit('document:error', { error, phase: 'exporting' });
       throw error;
+    } finally {
+      this.releaseLock();
     }
   }
 
@@ -189,6 +261,7 @@ export class DocumentController implements DocumentControllerView {
     this._currentBytes = null;
     this._pageCount = 0;
     this._documentId = null;
+    this._operationLock = false;
     this.events.emit('document:closed', {} as Record<string, never>);
   }
 }

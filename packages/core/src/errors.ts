@@ -47,3 +47,48 @@ export class DuplicatePluginError extends Error {
     super(`Plugin "${pluginName}" is already registered`);
   }
 }
+
+/**
+ * Thrown when a plugin declares a dependency that is not registered.
+ */
+export class MissingDependencyError extends Error {
+  override readonly name = 'MissingDependencyError' as const;
+
+  constructor(
+    public readonly pluginName: string,
+    public readonly dependency: string,
+  ) {
+    super(`Plugin "${pluginName}" requires "${dependency}" but it is not registered`);
+  }
+}
+
+/**
+ * Thrown when plugin dependencies form a cycle.
+ */
+export class CyclicDependencyError extends Error {
+  override readonly name = 'CyclicDependencyError' as const;
+
+  constructor(public readonly cycle: string[]) {
+    super(`Cyclic plugin dependency detected: ${cycle.join(' → ')}`);
+  }
+}
+
+/**
+ * Thrown when a plugin fails to initialize.
+ * Contains the partial list of plugins that were successfully initialized
+ * (and subsequently rolled back via destroy()).
+ */
+export class PluginInitError extends Error {
+  override readonly name = 'PluginInitError' as const;
+
+  constructor(
+    public readonly pluginName: string,
+    public readonly cause: unknown,
+    public readonly rolledBack: string[],
+  ) {
+    super(
+      `Plugin "${pluginName}" failed to initialize: ${cause instanceof Error ? cause.message : String(cause)}. ` +
+      `Rolled back ${rolledBack.length} plugin(s): [${rolledBack.join(', ')}]`,
+    );
+  }
+}

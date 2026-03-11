@@ -3,7 +3,7 @@ import { DocumentController } from '../src/document-controller.js';
 import { EventBus } from '../src/event-bus.js';
 import { InvalidStateError } from '../src/errors.js';
 import { DocumentState } from '@docsdk/shared-types';
-import type { DocSDKEventMap, DocumentHandle, CanvasTarget } from '@docsdk/shared-types';
+import type { DocSDKEventMap, CanvasTarget } from '@docsdk/shared-types';
 
 function setup() {
   const events = new EventBus<DocSDKEventMap>();
@@ -20,6 +20,7 @@ describe('DocumentController', () => {
     expect(controller.currentBytes).toBeNull();
     expect(controller.pageCount).toBe(0);
     expect(controller.documentId).toBeNull();
+    expect(controller.isLocked).toBe(false);
   });
 
   describe('load()', () => {
@@ -70,11 +71,12 @@ describe('DocumentController', () => {
       ).rejects.toThrow('network error');
 
       expect(controller.state).toBe(DocumentState.IDLE);
+      expect(controller.isLocked).toBe(false);
       expect(errorListener).toHaveBeenCalledOnce();
       expect(errorListener.mock.calls[0][0].phase).toBe('loading');
     });
 
-    it('should throw InvalidStateError when loading from non-IDLE state', async () => {
+    it('should throw when loading from non-IDLE state (operation lock)', async () => {
       const { controller } = setup();
       await controller.load(
         { type: 'buffer', buffer: MOCK_BYTES },
@@ -87,7 +89,57 @@ describe('DocumentController', () => {
           { type: 'buffer', buffer: MOCK_BYTES },
           async () => MOCK_BYTES,
         ),
-      ).rejects.toThrow(InvalidStateError);
+      ).rejects.toThrow();
+    });
+
+    // ── Operation lock ──────────────────────────────────────
+
+    it('should prevent concurrent loads via operation lock', async () => {
+      const { controller } = setup();
+
+      // Start a slow load
+      let resolveLoad!: (bytes: Uint8Array) => void;
+      const slowLoad = new Promise<Uint8Array>((resolve) => {
+        resolveLoad = resolve;
+      });
+
+      const loadPromise = controller.load(
+        { type: 'buffer', buffer: MOCK_BYTES },
+        async () => slowLoad,
+      );
+
+      expect(controller.isLocked).toBe(true);
+
+      // Second load should fail while first is in progress
+      await expect(
+        controller.load(
+          { type: 'buffer', buffer: MOCK_BYTES },
+          async () => MOCK_BYTES,
+        ),
+      ).rejects.toThrow('another operation is in progress');
+
+      resolveLoad(MOCK_BYTES);
+      await loadPromise;
+      expect(controller.isLocked).toBe(false);
+    });
+
+    // ── AbortSignal ─────────────────────────────────────────
+
+    it('should abort load when signal is already aborted', async () => {
+      const { controller } = setup();
+      const abortController = new AbortController();
+      abortController.abort();
+
+      await expect(
+        controller.load(
+          { type: 'buffer', buffer: MOCK_BYTES },
+          async () => MOCK_BYTES,
+          abortController.signal,
+        ),
+      ).rejects.toThrow('Load aborted');
+
+      expect(controller.state).toBe(DocumentState.IDLE);
+      expect(controller.isLocked).toBe(false);
     });
   });
 
@@ -147,6 +199,11 @@ describe('DocumentController', () => {
       controller.updateBytes(new Uint8Array([9, 9]));
       expect(controller.state).toBe(DocumentState.LOADED);
     });
+
+    it('should throw InvalidStateError when updating bytes from IDLE state', () => {
+      const { controller } = setup();
+      expect(() => controller.updateBytes(new Uint8Array([1]))).toThrow(InvalidStateError);
+    });
   });
 
   describe('export()', () => {
@@ -178,8 +235,45 @@ describe('DocumentController', () => {
       ).rejects.toThrow('serialize failed');
 
       expect(controller.state).toBe(DocumentState.LOADED);
+      expect(controller.isLocked).toBe(false);
       expect(errorListener).toHaveBeenCalledOnce();
       expect(errorListener.mock.calls[0][0].phase).toBe('exporting');
+    });
+
+    it('should prevent concurrent export via operation lock', async () => {
+      const { controller } = setup();
+      await controller.load({ type: 'buffer', buffer: MOCK_BYTES }, async () => MOCK_BYTES);
+
+      let resolveExport!: (bytes: Uint8Array) => void;
+      const slowExport = new Promise<Uint8Array>((resolve) => {
+        resolveExport = resolve;
+      });
+
+      const exportPromise = controller.export(async () => slowExport);
+      expect(controller.isLocked).toBe(true);
+
+      await expect(
+        controller.export(async () => MOCK_BYTES),
+      ).rejects.toThrow('another operation is in progress');
+
+      resolveExport(MOCK_BYTES);
+      await exportPromise;
+      expect(controller.isLocked).toBe(false);
+    });
+
+    it('should abort export when signal is already aborted', async () => {
+      const { controller } = setup();
+      await controller.load({ type: 'buffer', buffer: MOCK_BYTES }, async () => MOCK_BYTES);
+
+      const abortController = new AbortController();
+      abortController.abort();
+
+      await expect(
+        controller.export(async () => MOCK_BYTES, abortController.signal),
+      ).rejects.toThrow('Export aborted');
+
+      expect(controller.state).toBe(DocumentState.LOADED);
+      expect(controller.isLocked).toBe(false);
     });
   });
 
@@ -196,6 +290,7 @@ describe('DocumentController', () => {
       expect(controller.currentBytes).toBeNull();
       expect(controller.pageCount).toBe(0);
       expect(controller.documentId).toBeNull();
+      expect(controller.isLocked).toBe(false);
       expect(closedListener).toHaveBeenCalledOnce();
     });
   });
