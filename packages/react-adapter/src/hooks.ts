@@ -11,6 +11,8 @@ export {
   useDetection,
   useHistory,
   useKeyboardNavigation,
+  useKeyboardShortcuts,
+  useTheme,
 } from './hooks/index.js';
 export type {
   UseDocumentReturn,
@@ -23,4 +25,8 @@ export type {
   UseHistoryReturn,
   UseKeyboardNavigationOptions,
   UseKeyboardNavigationReturn,
+  KeyboardShortcut,
+  UseKeyboardShortcutsOptions,
+  UseKeyboardShortcutsReturn,
+  Theme,
 } from './hooks/index.js';

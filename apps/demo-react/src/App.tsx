@@ -7,7 +7,7 @@ import { ScreenshotPlugin } from '@docsdk/screenshot';
 import { SignaturePlugin } from '@docsdk/signature';
 import { ValidationPlugin } from '@docsdk/validation';
 import { DetectionPlugin } from '@docsdk/detection';
-import { DocSDKProvider } from '@docsdk/react-adapter/components';
+import { DocSDKProvider, ThemeProvider } from '@docsdk/react-adapter/components';
 import {
   useDocument,
   useFormFields,
@@ -15,6 +15,9 @@ import {
   useValidation,
   useScreenshot,
   useDetection,
+  useTheme,
+  useHistory,
+  useKeyboardShortcuts,
 } from '@docsdk/react-adapter/hooks';
 
 import { Toolbar } from './components/Toolbar.js';
@@ -41,8 +44,19 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
   const { validate, errors, isValid } = useValidation();
   const screenshot = useScreenshot();
   const { fileType, metadata } = useDetection();
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const { undo, redo } = useHistory();
   const viewerRef = useRef<HTMLDivElement>(null);
   const { scale, setScale } = useViewer(viewerRef);
+
+  // ── Keyboard shortcuts ────────────────────────────────────
+  useKeyboardShortcuts({
+    shortcuts: [
+      { key: 'mod+z', handler: undo, description: 'Undo' },
+      { key: 'mod+shift+z', handler: redo, description: 'Redo' },
+      { key: 'mod+y', handler: redo, description: 'Redo' },
+    ],
+  });
 
   // ── Lifted signature state ──────────────────────────────────
   const [signature, setSignature] = useState<SignatureData>(DEFAULT_SIGNATURE);
@@ -105,6 +119,21 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
             Error: {doc.error.message}
           </span>
         )}
+        <button
+          onClick={toggleTheme}
+          aria-label={`Switch to ${resolvedTheme === 'light' ? 'dark' : 'light'} mode`}
+          style={{
+            marginLeft: 'auto',
+            padding: '4px 10px',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--surface)',
+            cursor: 'pointer',
+            fontSize: 13,
+          }}
+        >
+          {resolvedTheme === 'light' ? 'Dark' : 'Light'} Mode
+        </button>
       </header>
 
       <nav aria-label="Document toolbar">
@@ -160,8 +189,10 @@ export default function App() {
   if (!sdk) return <div className="loading" role="status" aria-live="polite">Initializing DocSDK...</div>;
 
   return (
-    <DocSDKProvider sdk={sdk}>
-      <AppContent sdk={sdk} />
-    </DocSDKProvider>
+    <ThemeProvider>
+      <DocSDKProvider sdk={sdk}>
+        <AppContent sdk={sdk} />
+      </DocSDKProvider>
+    </ThemeProvider>
   );
 }

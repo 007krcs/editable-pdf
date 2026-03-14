@@ -8,6 +8,8 @@ export {
   FormFieldOverlay,
   SignaturePad,
   ErrorBoundary,
+  LoadingOverlay,
+  ThemeProvider,
 } from './components/index.js';
 export type {
   PDFViewerProps,
@@ -15,4 +17,6 @@ export type {
   FormFieldOverlayProps,
   SignaturePadProps,
   ErrorBoundaryProps,
+  LoadingOverlayProps,
+  ThemeProviderProps,
 } from './components/index.js';

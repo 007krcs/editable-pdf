@@ -20,3 +20,11 @@ export type {
   UseKeyboardNavigationOptions,
   UseKeyboardNavigationReturn,
 } from './use-keyboard-navigation.js';
+export { useKeyboardShortcuts } from './use-keyboard-shortcuts.js';
+export type {
+  KeyboardShortcut,
+  UseKeyboardShortcutsOptions,
+  UseKeyboardShortcutsReturn,
+} from './use-keyboard-shortcuts.js';
+export { useTheme } from '../theme/index.js';
+export type { Theme } from '../theme/index.js';

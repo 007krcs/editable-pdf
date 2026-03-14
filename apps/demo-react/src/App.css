@@ -19,6 +19,23 @@
   --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
 }
 
+[data-theme="dark"] {
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --surface-alt: #2a2a2a;
+  --border: #333333;
+  --text: #e0e0e0;
+  --text-muted: #999999;
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --danger: #f87171;
+  --danger-bg: #2d1515;
+  --danger-border: #7f1d1d;
+  --success: #4ade80;
+  --success-bg: #052e16;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -445,4 +462,77 @@ select:focus-visible {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── Dark mode viewer ──────────────────────────────── */
+[data-theme="dark"] .viewer-panel {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .viewer-panel.drag-over {
+  background: #1e3a5f;
+}
+
+[data-theme="dark"] .viewer-panel.signature-drag-over {
+  background: #1a3a1a;
+}
+
+/* ── Responsive: Tablet ────────────────────────────── */
+@media (max-width: 768px) {
+  .main {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    max-height: 40vh;
+  }
+
+  .toolbar {
+    padding: 8px 12px;
+  }
+
+  .toolbar .url-input input[type="text"] {
+    width: 160px;
+  }
+}
+
+/* ── Responsive: Mobile ────────────────────────────── */
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 12px;
+  }
+
+  .header h1 {
+    font-size: 15px;
+  }
+
+  .toolbar {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .toolbar .scale-control {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .toolbar .url-input {
+    width: 100%;
+  }
+
+  .toolbar .url-input input[type="text"] {
+    width: 100%;
+    flex: 1;
+  }
+
+  .sidebar {
+    max-height: 50vh;
+  }
+
+  .sidebar-section {
+    padding: 10px;
+  }
 }

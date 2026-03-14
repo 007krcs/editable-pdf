@@ -8,3 +8,7 @@ export { SignaturePad } from './SignaturePad.js';
 export type { SignaturePadProps } from './SignaturePad.js';
 export { ErrorBoundary } from './ErrorBoundary.js';
 export type { ErrorBoundaryProps } from './ErrorBoundary.js';
+export { LoadingOverlay } from './LoadingOverlay.js';
+export type { LoadingOverlayProps } from './LoadingOverlay.js';
+export { ThemeProvider } from '../theme/index.js';
+export type { ThemeProviderProps } from '../theme/index.js';
