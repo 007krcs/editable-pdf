@@ -5,6 +5,8 @@ export interface PDFCoordinates {
   y: number;
   width: number;
   height: number;
+  /** Rotation in degrees */
+  rotateDeg: number;
 }
 
 /**
@@ -22,6 +24,7 @@ export function viewportToPdfCoords(
   const pdfX = placement.x / scale;
   // PDF uses bottom-left origin, viewport uses top-left
   const pdfY = pageHeight - (placement.y / scale) - pdfHeight;
+  const rotateDeg = placement.rotation ?? 0;
 
-  return { x: pdfX, y: pdfY, width: pdfWidth, height: pdfHeight };
+  return { x: pdfX, y: pdfY, width: pdfWidth, height: pdfHeight, rotateDeg };
 }

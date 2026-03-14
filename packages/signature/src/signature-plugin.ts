@@ -5,6 +5,7 @@ import type {
   SignatureImage,
 } from '@docsdk/shared-types';
 import type { PDFEnginePlugin } from '@docsdk/pdf-engine';
+import { degrees } from 'pdf-lib';
 import { embedImage } from './image-embedder.js';
 import { viewportToPdfCoords } from './placement-calculator.js';
 
@@ -43,6 +44,7 @@ export class SignaturePlugin implements DocSDKPlugin {
       y: coords.y,
       width: coords.width,
       height: coords.height,
+      rotate: degrees(coords.rotateDeg),
     });
 
     // Reserialize to update rendering

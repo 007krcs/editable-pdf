@@ -5,6 +5,7 @@ export interface SignatureData {
   imageDataUrl: string | null;
   width: number;
   height: number;
+  rotation: number;
 }
 
 interface SignatureModeProps {
@@ -101,6 +102,8 @@ export function SignatureMode({ pageCount, signature, onSignatureChange, status 
                   maxWidth: '100%',
                   maxHeight: 100,
                   cursor: 'grab',
+                  transform: signature.rotation ? `rotate(${signature.rotation}deg)` : undefined,
+                  transition: 'transform 0.2s ease',
                 }}
               />
               <div className="signature-drag-hint">
@@ -128,6 +131,18 @@ export function SignatureMode({ pageCount, signature, onSignatureChange, status 
                   value={signature.height}
                   onChange={(e) => onSignatureChange({ height: Number(e.target.value) })}
                 />
+              </label>
+              <label>
+                Rotate:
+                <select
+                  value={signature.rotation}
+                  onChange={(e) => onSignatureChange({ rotation: Number(e.target.value) })}
+                >
+                  <option value={0}>0°</option>
+                  <option value={90}>90°</option>
+                  <option value={180}>180°</option>
+                  <option value={270}>270°</option>
+                </select>
               </label>
             </div>
           </>

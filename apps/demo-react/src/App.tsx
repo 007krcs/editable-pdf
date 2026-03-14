@@ -36,6 +36,7 @@ const DEFAULT_SIGNATURE: SignatureData = {
   imageDataUrl: null,
   width: 150,
   height: 50,
+  rotation: 0,
 };
 
 function AppContent({ sdk }: { sdk: DocumentSDK }) {
@@ -92,6 +93,7 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
             y: info.y,
             width: signature.width,
             height: signature.height,
+            rotation: signature.rotation,
           },
           scale,
         );

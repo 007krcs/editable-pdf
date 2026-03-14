@@ -48,4 +48,22 @@ describe('viewportToPdfCoords', () => {
     // pdfY = 792 - 742 - 50 = 0
     expect(coords.y).toBe(0);
   });
+
+  it('should pass through rotation degrees', () => {
+    const coords = viewportToPdfCoords(
+      { pageNumber: 1, x: 100, y: 100, width: 200, height: 50, rotation: 90 },
+      792,
+      1.0,
+    );
+    expect(coords.rotateDeg).toBe(90);
+  });
+
+  it('should default rotation to 0', () => {
+    const coords = viewportToPdfCoords(
+      { pageNumber: 1, x: 100, y: 100, width: 200, height: 50 },
+      792,
+      1.0,
+    );
+    expect(coords.rotateDeg).toBe(0);
+  });
 });

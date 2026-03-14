@@ -8,6 +8,8 @@ export interface SignaturePlacement {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  /** Rotation angle in degrees (0, 90, 180, 270). Default: 0 */
+  readonly rotation?: number;
 }
 
 /**
