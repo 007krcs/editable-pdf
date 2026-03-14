@@ -91,35 +91,41 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
 
   return (
     <div className="app">
-      <div className="header">
+      <a href="#main-content" className="skip-nav">
+        Skip to main content
+      </a>
+
+      <header className="header">
         <h1>DocSDK Demo</h1>
-        <span className="header-status">
+        <span className="header-status" aria-live="polite">
           State: <strong>{doc.state}</strong> | Pages: {doc.pageCount}
         </span>
         {doc.error && (
-          <span style={{ color: 'var(--danger)', fontSize: 13 }}>
+          <span role="alert" style={{ color: 'var(--danger)', fontSize: 13 }}>
             Error: {doc.error.message}
           </span>
         )}
-      </div>
+      </header>
 
-      <Toolbar
-        document={doc}
-        scale={scale}
-        onScaleChange={setScale}
-        onValidate={validate}
-      />
+      <nav aria-label="Document toolbar">
+        <Toolbar
+          document={doc}
+          scale={scale}
+          onScaleChange={setScale}
+          onValidate={validate}
+        />
+      </nav>
 
       <ValidationErrors errors={errors} isValid={isValid} />
 
-      <div className="main">
+      <main id="main-content" className="main">
         <PDFViewerPanel
           viewerRef={viewerRef}
           onFileDrop={handleFileDrop}
           onSignatureDrop={handleSignatureDrop}
         />
 
-        <div className="sidebar">
+        <aside className="sidebar" aria-label="Document tools">
           <DocumentInfo fileType={fileType} metadata={metadata} />
           <FormFieldPanel fields={fields} onFieldChange={setFieldValue} />
           <ScreenshotPanel screenshot={screenshot} pageCount={doc.pageCount} />
@@ -129,8 +135,8 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
             onSignatureChange={handleSignatureChange}
             status={sigStatus}
           />
-        </div>
-      </div>
+        </aside>
+      </main>
     </div>
   );
 }
@@ -151,7 +157,7 @@ export default function App() {
     }).then(setSdk);
   }, []);
 
-  if (!sdk) return <div className="loading">Initializing DocSDK...</div>;
+  if (!sdk) return <div className="loading" role="status" aria-live="polite">Initializing DocSDK...</div>;
 
   return (
     <DocSDKProvider sdk={sdk}>

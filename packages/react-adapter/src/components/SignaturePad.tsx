@@ -31,6 +31,20 @@ export function SignaturePad({
     [],
   );
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = rect.width / 2;
+        const y = rect.height / 2;
+        setClickPos({ x, y });
+        fileInputRef.current?.click();
+      }
+    },
+    [],
+  );
+
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -57,7 +71,11 @@ export function SignaturePad({
   return (
     <>
       <div
+        role="application"
+        aria-label="Signature placement area. Click to select position for signature."
+        tabIndex={0}
         onClick={handleCanvasClick}
+        onKeyDown={handleKeyDown}
         style={{
           cursor: 'crosshair',
           position: 'absolute',
@@ -69,6 +87,7 @@ export function SignaturePad({
         ref={fileInputRef}
         type="file"
         accept="image/png,image/jpeg"
+        aria-label="Upload signature image"
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />

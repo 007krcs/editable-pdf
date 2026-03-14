@@ -9,7 +9,7 @@ export function ValidationErrors({ errors, isValid }: ValidationErrorsProps) {
   if (isValid || errors.length === 0) return null;
 
   return (
-    <div className="validation-errors">
+    <div className="validation-errors" role="alert" aria-live="assertive">
       <strong>Validation Errors ({errors.length})</strong>
       <ul>
         {errors.map((err, i) => (

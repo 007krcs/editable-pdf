@@ -23,6 +23,8 @@ export function FormFieldOverlay({
 
   return (
     <div
+      role="group"
+      aria-label="PDF form fields"
       style={{ position: 'relative', ...style }}
       className={className}
     >
@@ -68,6 +70,8 @@ function FieldInput({ field, scale, onChange }: FieldInputProps) {
           onChange={(e) => onChange(e.target.value)}
           style={{ ...positionStyle, border: '1px solid #ccc', padding: '2px' }}
           placeholder={field.name}
+          aria-label={field.name}
+          aria-required={field.required}
         />
       );
     case FormFieldType.CHECKBOX:
@@ -77,6 +81,8 @@ function FieldInput({ field, scale, onChange }: FieldInputProps) {
           checked={field.value === true}
           onChange={(e) => onChange(e.target.checked)}
           style={positionStyle}
+          aria-label={field.name}
+          aria-required={field.required}
         />
       );
     case FormFieldType.DROPDOWN:
@@ -85,6 +91,8 @@ function FieldInput({ field, scale, onChange }: FieldInputProps) {
           value={String(field.value ?? '')}
           onChange={(e) => onChange(e.target.value)}
           style={positionStyle}
+          aria-label={field.name}
+          aria-required={field.required}
         >
           <option value="">Select...</option>
           {field.options?.map((opt) => (

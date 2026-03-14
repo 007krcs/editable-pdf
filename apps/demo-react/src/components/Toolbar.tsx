@@ -35,17 +35,18 @@ export function Toolbar({ document: doc, scale, onScaleChange, onValidate }: Too
   const disabled = state === 'IDLE';
 
   return (
-    <div className="toolbar">
-      <input type="file" accept=".pdf" onChange={handleFileUpload} />
+    <div className="toolbar" role="toolbar" aria-label="Document toolbar">
+      <input type="file" accept=".pdf" aria-label="Upload PDF file" onChange={handleFileUpload} />
       <div className="url-input">
         <input
           type="text"
           placeholder="Load from URL..."
+          aria-label="PDF URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
         />
-        <button onClick={handleUrlLoad} disabled={!url.trim()}>
+        <button onClick={handleUrlLoad} disabled={!url.trim()} aria-label="Load from URL">
           Load
         </button>
       </div>
@@ -56,13 +57,15 @@ export function Toolbar({ document: doc, scale, onScaleChange, onValidate }: Too
         Validate
       </button>
       <div className="scale-control">
-        <span>Scale:</span>
+        <label htmlFor="scale-range">Scale:</label>
         <input
+          id="scale-range"
           type="range"
           min="0.5"
           max="3"
           step="0.1"
           value={scale}
+          aria-label={`Zoom level: ${scale.toFixed(1)}x`}
           onChange={(e) => onScaleChange(Number(e.target.value))}
         />
         <span>{scale.toFixed(1)}x</span>

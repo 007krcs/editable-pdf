@@ -3,19 +3,22 @@ import { usePage } from '../hooks/use-page.js';
 
 export interface PDFPageProps {
   pageNumber: number;
+  totalPages?: number;
   scale?: number;
   style?: CSSProperties;
   className?: string;
 }
 
-export function PDFPage({ pageNumber, scale = 1.0, style, className }: PDFPageProps) {
+export function PDFPage({ pageNumber, totalPages, scale = 1.0, style, className }: PDFPageProps) {
   const { canvasRef, isRendering, error } = usePage(pageNumber, scale);
 
   return (
-    <div style={{ position: 'relative', ...style }} className={className}>
+    <div role="img" aria-label={`Page ${pageNumber}${totalPages ? ` of ${totalPages}` : ''}`} style={{ position: 'relative', ...style }} className={className}>
       <canvas ref={canvasRef} style={{ display: 'block' }} />
       {isRendering && (
         <div
+          role="status"
+          aria-live="polite"
           style={{
             position: 'absolute',
             inset: 0,
@@ -29,7 +32,7 @@ export function PDFPage({ pageNumber, scale = 1.0, style, className }: PDFPagePr
         </div>
       )}
       {error && (
-        <div style={{ color: 'red', padding: 8 }}>
+        <div role="alert" style={{ color: 'red', padding: 8 }}>
           Error rendering page {pageNumber}: {error.message}
         </div>
       )}

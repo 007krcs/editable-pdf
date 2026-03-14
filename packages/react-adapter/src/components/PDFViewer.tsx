@@ -14,6 +14,10 @@ export function PDFViewer({ scale: initialScale = 1.0, style, className }: PDFVi
   return (
     <div
       ref={containerRef}
+      role="document"
+      aria-label="PDF Document Viewer"
+      aria-live="polite"
+      tabIndex={0}
       style={{
         overflow: 'auto',
         background: '#f0f0f0',

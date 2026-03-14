@@ -10,6 +10,7 @@ export {
   useScreenshot,
   useDetection,
   useHistory,
+  useKeyboardNavigation,
 } from './hooks/index.js';
 export type {
   UseDocumentReturn,
@@ -20,4 +21,6 @@ export type {
   UseScreenshotReturn,
   UseDetectionReturn,
   UseHistoryReturn,
+  UseKeyboardNavigationOptions,
+  UseKeyboardNavigationReturn,
 } from './hooks/index.js';

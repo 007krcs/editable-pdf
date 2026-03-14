@@ -15,3 +15,8 @@ export { useDetection } from './use-detection.js';
 export type { UseDetectionReturn } from './use-detection.js';
 export { useHistory } from './use-history.js';
 export type { UseHistoryReturn } from './use-history.js';
+export { useKeyboardNavigation } from './use-keyboard-navigation.js';
+export type {
+  UseKeyboardNavigationOptions,
+  UseKeyboardNavigationReturn,
+} from './use-keyboard-navigation.js';
