@@ -2,6 +2,7 @@ import { createContext, type ReactNode } from 'react';
 import type { DocumentSDK } from '@docsdk/shared-types';
 
 export const DocSDKContext = createContext<DocumentSDK | null>(null);
+DocSDKContext.displayName = 'DocSDKContext';
 
 export interface DocSDKProviderProps {
   sdk: DocumentSDK;
