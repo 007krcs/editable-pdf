@@ -75,6 +75,38 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
     [doc],
   );
 
+  // ── Rotate image bytes on a canvas ─────────────────────────
+  const rotateImageBytes = useCallback(
+    (bytes: Uint8Array, deg: number): Promise<Uint8Array> => {
+      return new Promise((resolve, reject) => {
+        if (deg === 0) {
+          resolve(bytes);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          const swap = deg === 90 || deg === 270;
+          const w = swap ? img.height : img.width;
+          const h = swap ? img.width : img.height;
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d')!;
+          ctx.translate(w / 2, h / 2);
+          ctx.rotate((deg * Math.PI) / 180);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+          canvas.toBlob((blob) => {
+            if (!blob) { reject(new Error('Failed to rotate image')); return; }
+            blob.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
+          }, 'image/png');
+        };
+        img.onerror = () => reject(new Error('Failed to load image for rotation'));
+        img.src = URL.createObjectURL(new Blob([bytes]));
+      });
+    },
+    [],
+  );
+
   // ── Signature drop handler ──────────────────────────────────
   const handleSignatureDrop = useCallback(
     async (info: SignatureDropInfo) => {
@@ -85,15 +117,20 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
 
       try {
         const sigPlugin = sdk.getPlugin<SignaturePlugin>('signature');
+        // Pre-rotate the image bytes so the embedded image is already rotated
+        const finalBytes = await rotateImageBytes(signature.imageBytes, signature.rotation);
+        const finalWidth = (signature.rotation === 90 || signature.rotation === 270)
+          ? signature.height : signature.width;
+        const finalHeight = (signature.rotation === 90 || signature.rotation === 270)
+          ? signature.width : signature.height;
         await sigPlugin.placeSignature(
-          signature.imageBytes,
+          finalBytes,
           {
             pageNumber: info.pageNumber,
             x: info.x,
             y: info.y,
-            width: signature.width,
-            height: signature.height,
-            rotation: signature.rotation,
+            width: finalWidth,
+            height: finalHeight,
           },
           scale,
         );
@@ -102,7 +139,7 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
         setSigStatus(`Error: ${err instanceof Error ? err.message : String(err)}`);
       }
     },
-    [sdk, signature.imageBytes, signature.width, signature.height, scale],
+    [sdk, signature.imageBytes, signature.width, signature.height, signature.rotation, scale, rotateImageBytes],
   );
 
   return (
