@@ -51,17 +51,19 @@ export function SignatureMode({ pageCount, signature, onSignatureChange, status 
     }
   };
 
-  const handleDragStart = (e: DragEvent<HTMLImageElement>) => {
+  const dragImgRef = useRef<HTMLImageElement>(null);
+
+  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
     if (!signature.imageBytes) return;
 
     // Mark this drag as a signature drag so the viewer can distinguish it from PDF file drops
     e.dataTransfer.setData(SIGNATURE_DRAG_TYPE, 'true');
     e.dataTransfer.effectAllowed = 'copy';
 
-    // Use the preview image as the drag ghost
-    if (e.currentTarget) {
+    // Use the original (non-rotated) image as the drag ghost
+    if (dragImgRef.current) {
       e.dataTransfer.setDragImage(
-        e.currentTarget,
+        dragImgRef.current,
         signature.width / 4,
         signature.height / 4,
       );
@@ -91,17 +93,21 @@ export function SignatureMode({ pageCount, signature, onSignatureChange, status 
 
         {signature.imageDataUrl && (
           <>
-            <div className="signature-preview-container">
+            <div
+              className="signature-preview-container"
+              draggable
+              onDragStart={handleDragStart}
+              style={{ cursor: 'grab' }}
+            >
               <img
+                ref={dragImgRef}
                 src={signature.imageDataUrl}
                 alt="Signature preview"
                 className="signature-preview-img"
-                draggable
-                onDragStart={handleDragStart}
+                draggable={false}
                 style={{
                   maxWidth: '100%',
                   maxHeight: 100,
-                  cursor: 'grab',
                   transform: signature.rotation ? `rotate(${signature.rotation}deg)` : undefined,
                   transition: 'transform 0.2s ease',
                 }}
