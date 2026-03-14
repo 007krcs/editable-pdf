@@ -17,11 +17,11 @@ describe('viewportToPdfCoords', () => {
 
   it('should handle scale factor', () => {
     const coords = viewportToPdfCoords(
-      { pageNumber: 1, x: 200, y: 200, width: 400, height: 100 },
+      { pageNumber: 1, x: 200, y: 200, width: 200, height: 50 },
       792,
       2.0,
     );
-    // pdfX = 200/2 = 100, pdfWidth = 400/2 = 200, pdfHeight = 100/2 = 50
+    // pdfX = 200/2 = 100; width/height are already PDF points (not scaled)
     // pdfY = 792 - (200/2) - 50 = 792 - 100 - 50 = 642
     expect(coords.x).toBe(100);
     expect(coords.y).toBe(642);

@@ -16,8 +16,9 @@ export function viewportToPdfCoords(
   pageHeight: number,
   scale = 1.0,
 ): PDFCoordinates {
-  const pdfWidth = placement.width / scale;
-  const pdfHeight = placement.height / scale;
+  // width/height are already in PDF points; x/y are viewport pixels that need descaling
+  const pdfWidth = placement.width;
+  const pdfHeight = placement.height;
   const pdfX = placement.x / scale;
   // PDF uses bottom-left origin, viewport uses top-left
   const pdfY = pageHeight - (placement.y / scale) - pdfHeight;

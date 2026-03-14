@@ -16,6 +16,7 @@ let nextId = 0;
  * Allowed state transitions for the document lifecycle FSM.
  *
  * IDLE → LOADING → LOADED → RENDERING → READY → MODIFIED → LOADED (reserialize)
+ *                                                     ↘ RENDERING (re-render after mutation)
  *                                            ↘ EXPORTING → READY
  *                                        Any → IDLE (close/reset)
  */
@@ -25,12 +26,13 @@ const VALID_TRANSITIONS: Readonly<Record<DocumentState, readonly DocumentState[]
   [DocumentState.LOADED]: [DocumentState.RENDERING, DocumentState.EXPORTING, DocumentState.IDLE],
   [DocumentState.RENDERING]: [DocumentState.READY, DocumentState.LOADED],
   [DocumentState.READY]: [
+    DocumentState.LOADING,
     DocumentState.MODIFIED,
     DocumentState.RENDERING,
     DocumentState.EXPORTING,
     DocumentState.IDLE,
   ],
-  [DocumentState.MODIFIED]: [DocumentState.LOADED, DocumentState.EXPORTING, DocumentState.IDLE],
+  [DocumentState.MODIFIED]: [DocumentState.LOADING, DocumentState.LOADED, DocumentState.RENDERING, DocumentState.EXPORTING, DocumentState.IDLE],
   [DocumentState.EXPORTING]: [DocumentState.READY, DocumentState.LOADED],
 };
 
