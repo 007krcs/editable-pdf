@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, type RefObject } from 'react';
 import type { PDFEnginePlugin } from '@docsdk/pdf-engine';
+import { invalidateRenderCache } from '@docsdk/pdf-engine';
 import { useDocSDK } from './use-docsdk.js';
 
 export interface UseViewerReturn {
@@ -80,26 +81,26 @@ export function useViewer(
       placeholders.push(placeholder);
     }
 
-    // Render a specific page into its placeholder
-    const renderPageIntoPlaceholder = async (pageNum: number) => {
-      if (renderedPages.current.has(pageNum)) return;
+    // Render (or re-render) a specific page into its placeholder
+    const renderPageIntoPlaceholder = async (pageNum: number, force = false) => {
+      if (!force && renderedPages.current.has(pageNum)) return;
       renderedPages.current.add(pageNum);
 
       const placeholder = placeholders[pageNum - 1];
       if (!placeholder) return;
 
-      // Check if canvas already exists (edge case)
-      if (placeholder.querySelector('canvas')) return;
-
-      const canvas = document.createElement('canvas');
-      canvas.style.display = 'block';
-      canvas.dataset.page = String(pageNum);
-      placeholder.innerHTML = '';
-      placeholder.appendChild(canvas);
+      // Reuse existing canvas or create new one
+      let canvas = placeholder.querySelector('canvas') as HTMLCanvasElement | null;
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.style.display = 'block';
+        canvas.dataset.page = String(pageNum);
+        placeholder.innerHTML = '';
+        placeholder.appendChild(canvas);
+      }
 
       try {
         await engine.renderPage(pageNum, canvas, { scale });
-        // Update placeholder size to match rendered canvas
         placeholder.style.minHeight = '';
       } catch {
         placeholder.textContent = `Failed to render page ${pageNum}`;
@@ -132,8 +133,16 @@ export function useViewer(
       observer.observe(placeholder);
     }
 
+    // ── Real-time re-render on document mutations ──────────
+    // When a signature is placed, invalidate cache and re-render the affected page
+    const unsubSignature = sdk.events.on('signature:placed', ({ pageNumber }) => {
+      invalidateRenderCache();
+      renderPageIntoPlaceholder(pageNumber, true);
+    });
+
     return () => {
       observer.disconnect();
+      unsubSignature();
     };
   }, [sdk, pageCount, scale, containerRef]);
 
