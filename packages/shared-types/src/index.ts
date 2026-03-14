@@ -25,7 +25,7 @@ export type { FileTypeInfo, DocumentMetadata } from './detection.js';
 export type { ScreenshotOptions, ImageFormat } from './screenshot.js';
 
 // ── Events ────────────────────────────────────────────────
-export type { DocSDKEventMap, DocSDKEventName } from './events.js';
+export type { DocSDKEventMap, DocSDKEventName, AuditLogEntry } from './events.js';
 
 // ── Plugin system ─────────────────────────────────────────
 export type {

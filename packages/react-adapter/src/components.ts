@@ -7,10 +7,12 @@ export {
   PDFPage,
   FormFieldOverlay,
   SignaturePad,
+  ErrorBoundary,
 } from './components/index.js';
 export type {
   PDFViewerProps,
   PDFPageProps,
   FormFieldOverlayProps,
   SignaturePadProps,
+  ErrorBoundaryProps,
 } from './components/index.js';

@@ -65,10 +65,19 @@ export class PluginRegistry {
    * @throws {PluginInitError} if a plugin's initialize() throws (includes rollback info)
    * @throws {Error} if called more than once
    */
-  async initialize(context: PluginContext): Promise<void> {
+  /**
+   * Options for controlling initialization behavior.
+   */
+  async initialize(
+    context: PluginContext,
+    options: { strict?: boolean; criticalPlugins?: Set<string> } = {},
+  ): Promise<void> {
     if (this._initialized) {
       throw new Error('Plugins are already initialized');
     }
+
+    const strict = options.strict ?? true;
+    const critical = options.criticalPlugins ?? new Set<string>();
 
     // Step 1: Validate dependencies
     this.validateDependencies();
@@ -78,6 +87,7 @@ export class PluginRegistry {
 
     // Step 3: Initialize in order with rollback on failure
     const initialized: string[] = [];
+    const skipped: string[] = [];
 
     for (const name of this.initOrder) {
       const plugin = this.plugins.get(name)!;
@@ -85,19 +95,32 @@ export class PluginRegistry {
         await plugin.initialize(context);
         initialized.push(name);
       } catch (err) {
-        // Rollback all previously-initialized plugins in reverse order
-        for (const initName of [...initialized].reverse()) {
-          try {
-            await this.plugins.get(initName)!.destroy();
-          } catch {
-            // Best-effort rollback — swallow destroy errors during recovery
+        const isCritical = strict || critical.has(name);
+
+        if (isCritical) {
+          // Rollback all previously-initialized plugins in reverse order
+          for (const initName of [...initialized].reverse()) {
+            try {
+              await this.plugins.get(initName)!.destroy();
+            } catch {
+              // Best-effort rollback — swallow destroy errors during recovery
+            }
           }
+          this._initialized = false;
+          throw new PluginInitError(name, err, [...initialized]);
         }
-        this._initialized = false;
-        throw new PluginInitError(name, err, [...initialized]);
+
+        // Non-critical: log warning and skip
+        console.warn(
+          `[DocSDK] Non-critical plugin "${name}" failed to initialize: ${err instanceof Error ? err.message : String(err)}. Skipping.`,
+        );
+        skipped.push(name);
+        this.plugins.delete(name);
       }
     }
 
+    // Remove skipped plugins from init order
+    this.initOrder = this.initOrder.filter((n) => !skipped.includes(n));
     this._initialized = true;
   }
 

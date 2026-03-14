@@ -21,6 +21,17 @@ import { InvalidStateError } from './errors.js';
 export interface DocSDKConfig {
   /** Plugins to register during creation (initialized in order) */
   readonly plugins?: readonly DocSDKPlugin[];
+  /**
+   * When true, all plugin init failures abort SDK creation (default behavior).
+   * When false, non-critical plugin failures are logged as warnings and skipped.
+   * Critical plugins (pdf-engine) always abort on failure.
+   */
+  readonly strictMode?: boolean;
+  /**
+   * Plugin names that must succeed initialization (only used when strictMode is false).
+   * Default: ['pdf-engine']
+   */
+  readonly criticalPlugins?: readonly string[];
 }
 
 // ── Loader / serializer duck-types ─────────────────────────
@@ -78,8 +89,10 @@ export async function createDocumentSDK(config: DocSDKConfig = {}): Promise<Docu
     getPlugin: <T extends DocSDKPlugin>(name: string) => registry.tryGetPlugin<T>(name),
   };
 
-  // Initialize all plugins in registration order
-  await registry.initialize(context);
+  // Initialize all plugins in dependency order
+  const strict = config.strictMode ?? true;
+  const critical = new Set(config.criticalPlugins ?? ['pdf-engine']);
+  await registry.initialize(context, { strict, criticalPlugins: critical });
 
   // ── Build the public SDK object ────────────────────────
 

@@ -19,12 +19,21 @@ import {
 
 import { Toolbar } from './components/Toolbar.js';
 import { PDFViewerPanel } from './components/PDFViewerPanel.js';
+import type { SignatureDropInfo } from './components/PDFViewerPanel.js';
 import { FormFieldPanel } from './components/FormFieldPanel.js';
 import { ValidationErrors } from './components/ValidationErrors.js';
 import { DocumentInfo } from './components/DocumentInfo.js';
 import { ScreenshotPanel } from './components/ScreenshotPanel.js';
 import { SignatureMode } from './components/SignatureMode.js';
+import type { SignatureData } from './components/SignatureMode.js';
 import './App.css';
+
+const DEFAULT_SIGNATURE: SignatureData = {
+  imageBytes: null,
+  imageDataUrl: null,
+  width: 150,
+  height: 50,
+};
 
 function AppContent({ sdk }: { sdk: DocumentSDK }) {
   const doc = useDocument();
@@ -35,11 +44,49 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const { scale, setScale } = useViewer(viewerRef);
 
+  // ── Lifted signature state ──────────────────────────────────
+  const [signature, setSignature] = useState<SignatureData>(DEFAULT_SIGNATURE);
+  const [sigStatus, setSigStatus] = useState('');
+
+  const handleSignatureChange = useCallback((patch: Partial<SignatureData>) => {
+    setSignature((prev) => ({ ...prev, ...patch }));
+    setSigStatus('');
+  }, []);
+
   const handleFileDrop = useCallback(
     (file: File) => {
       doc.load({ type: 'file', file });
     },
     [doc],
+  );
+
+  // ── Signature drop handler ──────────────────────────────────
+  const handleSignatureDrop = useCallback(
+    async (info: SignatureDropInfo) => {
+      if (!signature.imageBytes) {
+        setSigStatus('Error: No signature image loaded');
+        return;
+      }
+
+      try {
+        const sigPlugin = sdk.getPlugin<SignaturePlugin>('signature');
+        await sigPlugin.placeSignature(
+          signature.imageBytes,
+          {
+            pageNumber: info.pageNumber,
+            x: info.x,
+            y: info.y,
+            width: signature.width,
+            height: signature.height,
+          },
+          scale,
+        );
+        setSigStatus(`Placed on page ${info.pageNumber}`);
+      } catch (err) {
+        setSigStatus(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    },
+    [sdk, signature.imageBytes, signature.width, signature.height, scale],
   );
 
   return (
@@ -66,13 +113,22 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
       <ValidationErrors errors={errors} isValid={isValid} />
 
       <div className="main">
-        <PDFViewerPanel viewerRef={viewerRef} onFileDrop={handleFileDrop} />
+        <PDFViewerPanel
+          viewerRef={viewerRef}
+          onFileDrop={handleFileDrop}
+          onSignatureDrop={handleSignatureDrop}
+        />
 
         <div className="sidebar">
           <DocumentInfo fileType={fileType} metadata={metadata} />
           <FormFieldPanel fields={fields} onFieldChange={setFieldValue} />
           <ScreenshotPanel screenshot={screenshot} pageCount={doc.pageCount} />
-          <SignatureMode sdk={sdk} pageCount={doc.pageCount} />
+          <SignatureMode
+            pageCount={doc.pageCount}
+            signature={signature}
+            onSignatureChange={handleSignatureChange}
+            status={sigStatus}
+          />
         </div>
       </div>
     </div>

@@ -326,6 +326,65 @@ body {
   flex-wrap: wrap;
 }
 
+.sig-clear-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--danger);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.sig-clear-btn:hover {
+  background: var(--danger-bg);
+}
+
+.signature-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+
+.signature-preview-img {
+  max-width: 100%;
+  max-height: 100px;
+  cursor: grab;
+  border-radius: var(--radius-sm);
+}
+
+.signature-preview-img:active {
+  cursor: grabbing;
+}
+
+.signature-drag-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── Signature drag-over state on viewer ───────────── */
+.viewer-panel.signature-drag-over {
+  background: #d4edda;
+}
+
+.viewer-panel.signature-drag-over canvas {
+  outline: 2px dashed var(--success);
+  outline-offset: 2px;
+}
+
+.signature-drop-hint {
+  color: var(--success);
+  font-weight: 600;
+}
+
 /* ── Loading screen ─────────────────────────────────── */
 .loading {
   display: flex;

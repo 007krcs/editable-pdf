@@ -6,6 +6,18 @@ import type { FileTypeInfo, DocumentMetadata } from './detection.js';
 import type { CanvasTarget } from './rendering.js';
 
 /**
+ * Structured audit log entry for compliance tracking.
+ */
+export interface AuditLogEntry {
+  readonly timestamp: string;
+  readonly action: string;
+  readonly userId?: string;
+  readonly documentId?: string;
+  readonly sessionId: string;
+  readonly details?: Record<string, unknown>;
+}
+
+/**
  * Complete map of all SDK events.
  * Each key is an event name, each value is the payload type.
  * All plugins and consumers subscribe through this typed contract.
@@ -18,6 +30,7 @@ export interface DocSDKEventMap {
   'document:exporting': Record<string, never>;
   'document:exported': { readonly bytes: Uint8Array };
   'document:closed': Record<string, never>;
+  'document:progress': { readonly phase: string; readonly percent: number };
 
   // ── Detection ───────────────────────────────────────────
   'document:detected': { readonly fileType: FileTypeInfo; readonly metadata: DocumentMetadata };
@@ -39,6 +52,17 @@ export interface DocSDKEventMap {
 
   // ── Validation ──────────────────────────────────────────
   'validation:result': ValidationResult;
+
+  // ── Security ────────────────────────────────────────────
+  'security:validation-failed': { readonly error: Error; readonly code: string };
+
+  // ── Audit ───────────────────────────────────────────────
+  'audit:entry': { readonly entry: AuditLogEntry };
+
+  // ── History (Undo/Redo) ─────────────────────────────────
+  'history:pushed': { readonly description: string; readonly canUndo: boolean; readonly canRedo: boolean };
+  'history:undone': { readonly description: string; readonly canUndo: boolean; readonly canRedo: boolean };
+  'history:redone': { readonly description: string; readonly canUndo: boolean; readonly canRedo: boolean };
 }
 
 /**

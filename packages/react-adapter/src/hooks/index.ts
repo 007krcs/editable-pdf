@@ -13,3 +13,5 @@ export { useScreenshot } from './use-screenshot.js';
 export type { UseScreenshotReturn } from './use-screenshot.js';
 export { useDetection } from './use-detection.js';
 export type { UseDetectionReturn } from './use-detection.js';
+export { useHistory } from './use-history.js';
+export type { UseHistoryReturn } from './use-history.js';

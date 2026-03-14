@@ -9,6 +9,7 @@ export {
   useValidation,
   useScreenshot,
   useDetection,
+  useHistory,
 } from './hooks/index.js';
 export type {
   UseDocumentReturn,
@@ -18,4 +19,5 @@ export type {
   UseValidationReturn,
   UseScreenshotReturn,
   UseDetectionReturn,
+  UseHistoryReturn,
 } from './hooks/index.js';

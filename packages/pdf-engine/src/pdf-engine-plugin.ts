@@ -34,10 +34,18 @@ export class PDFEnginePlugin implements DocSDKPlugin {
   /**
    * Load raw document bytes from any source type.
    * Called by createDocumentSDK() via duck-typing.
-   * Initializes the pdf-lib / pdfjs-dist bridge and sets the page count.
+   * Runs security validation (if SecurityPlugin is registered), then
+   * initializes the pdf-lib / pdfjs-dist bridge and sets the page count.
    */
   async loadBytes(source: DocumentSource): Promise<Uint8Array> {
     const bytes = await loadPdfBytes(source);
+
+    // Run security validation if the security plugin is registered
+    const securityPlugin = this.context?.getPlugin<DocSDKPlugin & { validate(b: Uint8Array): void }>('security');
+    if (securityPlugin && typeof securityPlugin.validate === 'function') {
+      securityPlugin.validate(bytes);
+    }
+
     await this.bridge.initialize(bytes);
     this.context?.documentController.setPageCount(this.bridge.getPageCount());
     return bytes;

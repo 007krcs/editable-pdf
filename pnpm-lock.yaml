@@ -82,6 +82,25 @@ importers:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@25.4.0)
 
+  packages/audit:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
   packages/core:
     dependencies:
       '@docsdk/shared-types':
@@ -131,6 +150,25 @@ importers:
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
+  packages/history:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
     devDependencies:
       tsup:
         specifier: ^8.4.0
@@ -230,6 +268,25 @@ importers:
       '@docsdk/pdf-engine':
         specifier: workspace:*
         version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
+  packages/security:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
       '@docsdk/shared-types':
         specifier: workspace:*
         version: link:../shared-types
