@@ -32,6 +32,19 @@ export function Toolbar({ document: doc, scale, onScaleChange, onValidate }: Too
     await load({ type: 'url', url: url.trim() });
   };
 
+  const handleBase64Load = async () => {
+    const input = window.prompt('Paste base64-encoded PDF string:');
+    if (!input?.trim()) return;
+    try {
+      const raw = atob(input.trim());
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      await load({ type: 'buffer', buffer: bytes });
+    } catch {
+      window.alert('Invalid base64 string.');
+    }
+  };
+
   const disabled = state === 'IDLE';
 
   return (
@@ -50,6 +63,9 @@ export function Toolbar({ document: doc, scale, onScaleChange, onValidate }: Too
           Load
         </button>
       </div>
+      <button onClick={handleBase64Load} aria-label="Load from Base64">
+        Base64
+      </button>
       <button className="primary" onClick={handleExport} disabled={disabled}>
         Export PDF
       </button>

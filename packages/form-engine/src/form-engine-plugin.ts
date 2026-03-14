@@ -88,6 +88,16 @@ export class FormEnginePlugin implements DocSDKPlugin {
     writeFieldValue(pdfDoc, fieldName, value);
     this._dirty = true;
 
+    // Update the cached descriptor so React controlled inputs stay in sync
+    const idx = this.cachedFields.findIndex((f) => f.name === fieldName);
+    if (idx !== -1) {
+      this.cachedFields = [
+        ...this.cachedFields.slice(0, idx),
+        { ...this.cachedFields[idx], value },
+        ...this.cachedFields.slice(idx + 1),
+      ];
+    }
+
     if (options.immediate) {
       await this.flush();
     }

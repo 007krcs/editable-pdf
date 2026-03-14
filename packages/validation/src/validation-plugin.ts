@@ -7,6 +7,7 @@ import type {
 } from '@docsdk/shared-types';
 import type { FormEnginePlugin } from '@docsdk/form-engine';
 import { RequiredFieldRule } from './required-field-rule.js';
+import { EmailFieldRule } from './email-field-rule.js';
 import { RuleRunner } from './rule-runner.js';
 
 export interface ValidationConfig {
@@ -25,6 +26,7 @@ export class ValidationPlugin implements DocSDKPlugin {
   constructor(config: ValidationConfig = {}) {
     this.config = config;
     this.runner.addRule(new RequiredFieldRule());
+    this.runner.addRule(new EmailFieldRule());
   }
 
   initialize(context: PluginContext): void {
