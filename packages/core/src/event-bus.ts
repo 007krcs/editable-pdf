@@ -23,11 +23,16 @@ export class EventBus<TMap> implements TypedEventEmitter<TMap> {
   private readonly maxListeners: number;
   private readonly onError?: (err: EventBusError) => void;
 
+  /**
+   * @param options.maxListeners - Maximum listeners per event before a leak warning (default 100).
+   * @param options.onError - Optional callback invoked for each listener error instead of throwing.
+   */
   constructor(options: { maxListeners?: number; onError?: (err: EventBusError) => void } = {}) {
     this.maxListeners = options.maxListeners ?? 100;
     this.onError = options.onError;
   }
 
+  /** Subscribe to an event. Returns an unsubscribe function that removes the listener when called. */
   on<K extends keyof TMap>(event: K, listener: Listener<TMap[K]>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -47,6 +52,7 @@ export class EventBus<TMap> implements TypedEventEmitter<TMap> {
     };
   }
 
+  /** Subscribe to an event for a single emission; the listener is automatically removed after it fires once. */
   once<K extends keyof TMap>(event: K, listener: Listener<TMap[K]>): () => void {
     const wrapper = ((payload: TMap[K]) => {
       unsub();
@@ -56,6 +62,7 @@ export class EventBus<TMap> implements TypedEventEmitter<TMap> {
     return unsub;
   }
 
+  /** Remove a specific listener for the given event. */
   off<K extends keyof TMap>(event: K, listener: Listener<TMap[K]>): void {
     const set = this.listeners.get(event);
     if (set) {
@@ -63,6 +70,7 @@ export class EventBus<TMap> implements TypedEventEmitter<TMap> {
     }
   }
 
+  /** Emit an event, invoking all registered listeners with error isolation between them. */
   emit<K extends keyof TMap>(event: K, payload: TMap[K]): void {
     const set = this.listeners.get(event);
     if (!set || set.size === 0) return;
@@ -101,6 +109,7 @@ export class EventBus<TMap> implements TypedEventEmitter<TMap> {
     return this.listeners.get(event)?.size ?? 0;
   }
 
+  /** Remove all listeners for all events, resetting the bus to a clean state. */
   removeAllListeners(): void {
     this.listeners.clear();
   }
