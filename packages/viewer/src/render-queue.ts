@@ -1,5 +1,6 @@
 type RenderTask = {
   pageNumber: number;
+  priority: number;
   execute: () => Promise<void>;
   resolve: () => void;
   reject: (error: Error) => void;
@@ -15,7 +16,7 @@ export class RenderQueue {
     this.debounceMs = debounceMs;
   }
 
-  enqueue(pageNumber: number, execute: () => Promise<void>): Promise<void> {
+  enqueue(pageNumber: number, execute: () => Promise<void>, priority = 0): Promise<void> {
     // Cancel any pending debounced render for this page
     const existingTimer = this.debounceTimers.get(pageNumber);
     if (existingTimer) {
@@ -28,7 +29,14 @@ export class RenderQueue {
     return new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.debounceTimers.delete(pageNumber);
-        this.queue.push({ pageNumber, execute, resolve, reject });
+        // Insert at correct position based on priority (ascending: lower = higher priority)
+        const task: RenderTask = { pageNumber, priority, execute, resolve, reject };
+        const insertIndex = this.queue.findIndex((t) => t.priority > priority);
+        if (insertIndex === -1) {
+          this.queue.push(task);
+        } else {
+          this.queue.splice(insertIndex, 0, task);
+        }
         this.processQueue();
       }, this.debounceMs);
 
