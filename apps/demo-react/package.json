@@ -19,6 +19,13 @@
     "@docsdk/validation": "workspace:*",
     "@docsdk/detection": "workspace:*",
     "@docsdk/react-adapter": "workspace:*",
+    "@docsdk/annotation": "workspace:*",
+    "@docsdk/text-extraction": "workspace:*",
+    "@docsdk/page-ops": "workspace:*",
+    "@docsdk/watermark": "workspace:*",
+    "@docsdk/redaction": "workspace:*",
+    "@docsdk/merge-split": "workspace:*",
+    "@docsdk/bookmarks": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

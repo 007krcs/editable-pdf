@@ -32,6 +32,12 @@ importers:
 
   apps/demo-react:
     dependencies:
+      '@docsdk/annotation':
+        specifier: workspace:*
+        version: link:../../packages/annotation
+      '@docsdk/bookmarks':
+        specifier: workspace:*
+        version: link:../../packages/bookmarks
       '@docsdk/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -41,24 +47,39 @@ importers:
       '@docsdk/form-engine':
         specifier: workspace:*
         version: link:../../packages/form-engine
+      '@docsdk/merge-split':
+        specifier: workspace:*
+        version: link:../../packages/merge-split
+      '@docsdk/page-ops':
+        specifier: workspace:*
+        version: link:../../packages/page-ops
       '@docsdk/pdf-engine':
         specifier: workspace:*
         version: link:../../packages/pdf-engine
       '@docsdk/react-adapter':
         specifier: workspace:*
         version: link:../../packages/react-adapter
+      '@docsdk/redaction':
+        specifier: workspace:*
+        version: link:../../packages/redaction
       '@docsdk/screenshot':
         specifier: workspace:*
         version: link:../../packages/screenshot
       '@docsdk/signature':
         specifier: workspace:*
         version: link:../../packages/signature
+      '@docsdk/text-extraction':
+        specifier: workspace:*
+        version: link:../../packages/text-extraction
       '@docsdk/validation':
         specifier: workspace:*
         version: link:../../packages/validation
       '@docsdk/viewer':
         specifier: workspace:*
         version: link:../../packages/viewer
+      '@docsdk/watermark':
+        specifier: workspace:*
+        version: link:../../packages/watermark
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -82,11 +103,58 @@ importers:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@25.4.0)
 
+  packages/annotation:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
   packages/audit:
     dependencies:
       '@docsdk/core':
         specifier: workspace:*
         version: link:../core
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
+  packages/bookmarks:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
       '@docsdk/shared-types':
         specifier: workspace:*
         version: link:../shared-types
@@ -169,6 +237,56 @@ importers:
       '@docsdk/shared-types':
         specifier: workspace:*
         version: link:../shared-types
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
+  packages/merge-split:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
+  packages/page-ops:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
     devDependencies:
       tsup:
         specifier: ^8.4.0
@@ -276,6 +394,31 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
 
+  packages/redaction:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
   packages/screenshot:
     dependencies:
       '@docsdk/core':
@@ -367,6 +510,28 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
 
+  packages/text-extraction:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
   packages/validation:
     dependencies:
       '@docsdk/core':
@@ -404,6 +569,31 @@ importers:
       happy-dom:
         specifier: ^20.8.3
         version: 20.8.3
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@25.4.0)(happy-dom@20.8.3)
+
+  packages/watermark:
+    dependencies:
+      '@docsdk/core':
+        specifier: workspace:*
+        version: link:../core
+      '@docsdk/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+      '@docsdk/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+    devDependencies:
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)

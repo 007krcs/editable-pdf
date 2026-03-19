@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { createDocumentSDK } from '@docsdk/core';
 import type { DocumentSDK } from '@docsdk/shared-types';
 import { PDFEnginePlugin } from '@docsdk/pdf-engine';
@@ -7,6 +7,13 @@ import { ScreenshotPlugin } from '@docsdk/screenshot';
 import { SignaturePlugin } from '@docsdk/signature';
 import { ValidationPlugin } from '@docsdk/validation';
 import { DetectionPlugin } from '@docsdk/detection';
+import { AnnotationPlugin } from '@docsdk/annotation';
+import { TextExtractionPlugin } from '@docsdk/text-extraction';
+import { PageOpsPlugin } from '@docsdk/page-ops';
+import { WatermarkPlugin } from '@docsdk/watermark';
+import { RedactionPlugin } from '@docsdk/redaction';
+import { MergeSplitPlugin } from '@docsdk/merge-split';
+import { BookmarksPlugin } from '@docsdk/bookmarks';
 import { DocSDKProvider, ThemeProvider } from '@docsdk/react-adapter/components';
 import {
   useDocument,
@@ -29,6 +36,12 @@ import { DocumentInfo } from './components/DocumentInfo.js';
 import { ScreenshotPanel } from './components/ScreenshotPanel.js';
 import { SignatureMode } from './components/SignatureMode.js';
 import type { SignatureData } from './components/SignatureMode.js';
+import { AnnotationPanel } from './components/AnnotationPanel.js';
+import { PageOpsPanel } from './components/PageOpsPanel.js';
+import { SearchPanel } from './components/SearchPanel.js';
+import { WatermarkPanel } from './components/WatermarkPanel.js';
+import { RedactionPanel } from './components/RedactionPanel.js';
+import { MergeSplitPanel } from './components/MergeSplitPanel.js';
 import './App.css';
 
 const DEFAULT_SIGNATURE: SignatureData = {
@@ -49,6 +62,26 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
   const { undo, redo } = useHistory();
   const viewerRef = useRef<HTMLDivElement>(null);
   const { scale, setScale } = useViewer(viewerRef);
+
+  // ── Plugin references for new features ─────────────────────
+  const annotationPlugin = useMemo(() => {
+    try { return sdk.getPlugin<AnnotationPlugin>('annotation'); } catch { return null; }
+  }, [sdk]);
+  const textExtractionPlugin = useMemo(() => {
+    try { return sdk.getPlugin<TextExtractionPlugin>('text-extraction'); } catch { return null; }
+  }, [sdk]);
+  const pageOpsPlugin = useMemo(() => {
+    try { return sdk.getPlugin<PageOpsPlugin>('page-ops'); } catch { return null; }
+  }, [sdk]);
+  const watermarkPlugin = useMemo(() => {
+    try { return sdk.getPlugin<WatermarkPlugin>('watermark'); } catch { return null; }
+  }, [sdk]);
+  const redactionPlugin = useMemo(() => {
+    try { return sdk.getPlugin<RedactionPlugin>('redaction'); } catch { return null; }
+  }, [sdk]);
+  const mergeSplitPlugin = useMemo(() => {
+    try { return sdk.getPlugin<MergeSplitPlugin>('merge-split'); } catch { return null; }
+  }, [sdk]);
 
   // ── Keyboard shortcuts ────────────────────────────────────
   useKeyboardShortcuts({
@@ -117,7 +150,6 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
 
       try {
         const sigPlugin = sdk.getPlugin<SignaturePlugin>('signature');
-        // Pre-rotate the image bytes so the embedded image is already rotated
         const finalBytes = await rotateImageBytes(signature.imageBytes, signature.rotation);
         const finalWidth = (signature.rotation === 90 || signature.rotation === 270)
           ? signature.height : signature.width;
@@ -196,6 +228,12 @@ function AppContent({ sdk }: { sdk: DocumentSDK }) {
         <aside className="sidebar" aria-label="Document tools">
           <DocumentInfo fileType={fileType} metadata={metadata} />
           <FormFieldPanel fields={fields} onFieldChange={setFieldValue} />
+          <SearchPanel plugin={textExtractionPlugin} />
+          <AnnotationPanel plugin={annotationPlugin} pageCount={doc.pageCount} />
+          <PageOpsPanel plugin={pageOpsPlugin} pageCount={doc.pageCount} />
+          <WatermarkPanel plugin={watermarkPlugin} />
+          <RedactionPanel plugin={redactionPlugin} pageCount={doc.pageCount} />
+          <MergeSplitPanel plugin={mergeSplitPlugin} pageCount={doc.pageCount} />
           <ScreenshotPanel screenshot={screenshot} pageCount={doc.pageCount} />
           <SignatureMode
             pageCount={doc.pageCount}
@@ -221,6 +259,13 @@ export default function App() {
         new SignaturePlugin(),
         new ValidationPlugin(),
         new DetectionPlugin(),
+        new AnnotationPlugin(),
+        new TextExtractionPlugin(),
+        new PageOpsPlugin(),
+        new WatermarkPlugin(),
+        new RedactionPlugin(),
+        new MergeSplitPlugin(),
+        new BookmarksPlugin(),
       ],
     }).then(setSdk);
   }, []);
