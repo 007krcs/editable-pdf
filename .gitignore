@@ -5,3 +5,6 @@ dist/
 .DS_Store
 *.local
 coverage/
+
+# Claude Code local config
+.claude/
